@@ -44,8 +44,6 @@ namespace Grand.Core.Domain.Customers
         public static string LanguageAutomaticallyDetected { get { return "LanguageAutomaticallyDetected"; } }
         public static string SelectedPaymentMethod { get { return "SelectedPaymentMethod"; } }
         public static string SelectedShippingOption { get { return "SelectedShippingOption"; } }
-        public static string ShippingOptionAttributeDescription { get { return "ShippingOptionAttributeDescription"; } }
-        public static string ShippingOptionAttributeXml { get { return "ShippingOptionAttributeXml"; } }
         //value indicating whether customer chose "pick up in store" option
         //public static string SelectedPickUpInStore { get { return "SelectedPickUpInStore"; } }
         public static string SelectedPickupPoint { get { return "SelectedPickupPoint"; } }

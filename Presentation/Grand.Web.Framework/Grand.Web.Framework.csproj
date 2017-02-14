@@ -167,7 +167,6 @@
     <Compile Include="CheckAffiliateAttribute.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\BasePluginController.cs" />
-    <Compile Include="Controllers\BaseShippingController.cs" />
     <Compile Include="Controllers\ParameterBasedOnFormNameAndValueAttribute.cs" />
     <Compile Include="ErrorJsonResult.cs" />
     <Compile Include="Kendoui\DataSourceRequest.cs" />

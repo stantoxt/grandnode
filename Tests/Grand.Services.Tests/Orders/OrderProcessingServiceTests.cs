@@ -243,8 +243,7 @@ namespace Grand.Services.Orders.Tests {
                 _eventPublisher, _pdfService, null, null,
                 _shippingSettings, _paymentSettings, _rewardPointsSettings,
                 _orderSettings, _taxSettings, _localizationSettings,
-                _currencySettings,
-                null);
+                _currencySettings);
         }
 
         [TestMethod()]
