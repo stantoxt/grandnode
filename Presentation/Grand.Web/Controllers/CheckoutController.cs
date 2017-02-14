@@ -483,6 +483,26 @@ namespace Grand.Web.Controllers
             return interval.TotalSeconds > _orderSettings.MinimumOrderPlacementInterval;
         }
 
+        //change 2017_02, whole method
+        [NonAction]
+        protected void ValidateShippingForm(FormCollection form, out List<string> warnings)
+        {
+            //call plugin, let it validate form, return warning messages
+            var shippingMethodName = form["shippingoption"].Split(new[] { "___" }, StringSplitOptions.RemoveEmptyEntries);
+
+            var shippingMethod = _shippingService.LoadShippingRateComputationMethodBySystemName(shippingMethodName[1]);
+            if (shippingMethod == null)
+                throw new Exception("Shipping method is not selected");
+
+            var shippingControllerType = shippingMethod.GetControllerType();
+            var shippingController = DependencyResolver.Current.GetService(shippingControllerType) as BaseShippingController;
+
+            warnings = shippingController.ValidateShippingForm(form).ToList();
+
+            foreach (var warning in warnings)
+                ModelState.AddModelError("", warning);
+        }
+
         #endregion
 
         #region Methods (common)
@@ -912,7 +932,7 @@ namespace Grand.Web.Controllers
         [HttpPost, ActionName("ShippingMethod")]
         [FormValueRequired("nextstep")]
         [ValidateInput(false)]
-        public virtual ActionResult SelectShippingMethod(string shippingoption)
+        public virtual ActionResult SelectShippingMethod(FormCollection form)
         {
             //validation
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
@@ -936,17 +956,23 @@ namespace Grand.Web.Controllers
             }
 
             //parse selected method 
-            if (String.IsNullOrEmpty(shippingoption))
+            if (String.IsNullOrEmpty(form["shippingoption"]))
                 return ShippingMethod();
-            var splittedOption = shippingoption.Split(new [] { "___" }, StringSplitOptions.RemoveEmptyEntries);
+            var splittedOption = form["shippingoption"].Split(new [] { "___" }, StringSplitOptions.RemoveEmptyEntries);
             if (splittedOption.Length != 2)
                 return ShippingMethod();
             string selectedName = splittedOption[0];
             string shippingRateComputationMethodSystemName = splittedOption[1];
-            
-            //find it
-            //performance optimization. try cache first
-            var shippingOptions = _workContext.CurrentCustomer.GetAttribute<List<ShippingOption>>(SystemCustomerAttributeNames.OfferedShippingOptions, _storeContext.CurrentStore.Id);
+
+            //validate customer's input
+            List<string> warnings;
+            ValidateShippingForm(form, out warnings);
+
+            if (ModelState.IsValid)
+            {
+                //find it
+                //performance optimization. try cache first
+                var shippingOptions = _workContext.CurrentCustomer.GetAttribute<List<ShippingOption>>(SystemCustomerAttributeNames.OfferedShippingOptions, _storeContext.CurrentStore.Id);
             if (shippingOptions == null || shippingOptions.Count == 0)
             {
                 //not found? let's load them using shipping service
@@ -971,6 +997,10 @@ namespace Grand.Web.Controllers
             _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, SystemCustomerAttributeNames.SelectedShippingOption, shippingOption, _storeContext.CurrentStore.Id);
             
             return RedirectToRoute("CheckoutPaymentMethod");
+            }
+
+            var model = PrepareShippingMethodModel(cart, _workContext.CurrentCustomer.ShippingAddress);
+            return View(model);
         }
         
         
@@ -1787,10 +1817,16 @@ namespace Grand.Web.Controllers
                     throw new Exception("Selected shipping method can't be parsed");
                 string selectedName = splittedOption[0];
                 string shippingRateComputationMethodSystemName = splittedOption[1];
-                
-                //find it
-                //performance optimization. try cache first
-                var shippingOptions = _workContext.CurrentCustomer.GetAttribute<List<ShippingOption>>(SystemCustomerAttributeNames.OfferedShippingOptions, _storeContext.CurrentStore.Id);
+
+                //validate customer's input
+                List<string> warnings;
+                ValidateShippingForm(form, out warnings);
+
+                if (ModelState.IsValid)
+                {
+                    //find it
+                    //performance optimization. try cache first
+                    var shippingOptions = _workContext.CurrentCustomer.GetAttribute<List<ShippingOption>>(SystemCustomerAttributeNames.OfferedShippingOptions, _storeContext.CurrentStore.Id);
                 if (shippingOptions == null || shippingOptions.Count == 0)
                 {
                     //not found? let's load them using shipping service
@@ -1816,6 +1852,10 @@ namespace Grand.Web.Controllers
                 
                 //load next step
                 return OpcLoadStepAfterShippingMethod(cart);
+                }
+
+                var message = warnings.ToJson().Replace("[", "").Replace("]", "").Replace("\"", "");
+                return Json(new { error = 1, message = message });
             }
             catch (Exception exc)
             {

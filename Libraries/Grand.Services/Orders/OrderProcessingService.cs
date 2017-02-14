@@ -83,6 +83,7 @@ namespace Grand.Services.Orders
         private readonly TaxSettings _taxSettings;
         private readonly LocalizationSettings _localizationSettings;
         private readonly CurrencySettings _currencySettings;
+        private readonly IStoreContext _storeContext;
 
         #endregion
 
@@ -128,6 +129,7 @@ namespace Grand.Services.Orders
         /// <param name="taxSettings">Tax settings</param>
         /// <param name="localizationSettings">Localization settings</param>
         /// <param name="currencySettings">Currency settings</param>
+        /// <param name="storeContext">Store context</param>
         public OrderProcessingService(IOrderService orderService,
             IWebHelper webHelper,
             ILocalizationService localizationService,
@@ -166,7 +168,8 @@ namespace Grand.Services.Orders
             OrderSettings orderSettings,
             TaxSettings taxSettings,
             LocalizationSettings localizationSettings,
-            CurrencySettings currencySettings)
+            CurrencySettings currencySettings,
+            IStoreContext storeContext)
         {
             this._orderService = orderService;
             this._webHelper = webHelper;
@@ -207,6 +210,7 @@ namespace Grand.Services.Orders
             this._taxSettings = taxSettings;
             this._localizationSettings = localizationSettings;
             this._currencySettings = currencySettings;
+            this._storeContext = storeContext;
         }
 
         #endregion
@@ -242,7 +246,6 @@ namespace Grand.Services.Orders
 
             public string CheckoutAttributeDescription { get; set; }
             public string CheckoutAttributesXml { get; set; }
-
             public IList<ShoppingCartItem> Cart { get; set; }
             public List<Discount> AppliedDiscounts { get; set; }
             public List<AppliedGiftCard> AppliedGiftCards { get; set; }
@@ -1240,7 +1243,9 @@ namespace Grand.Services.Orders
                         CustomValuesXml = processPaymentRequest.SerializeCustomValues(),
                         VatNumber = details.VatNumber,
                         UrlReferrer = details.Customer.GetAttribute<string>(SystemCustomerAttributeNames.LastUrlReferrer),
-                        CreatedOnUtc = DateTime.UtcNow
+                        CreatedOnUtc = DateTime.UtcNow,
+                        ShippingOptionAttributeDescription = details.Customer.GetAttribute<string>(SystemCustomerAttributeNames.ShippingOptionAttributeDescription, _storeContext.CurrentStore.Id),
+                        ShippingOptionAttributeXml = details.Customer.GetAttribute<string>(SystemCustomerAttributeNames.ShippingOptionAttributeXml, _storeContext.CurrentStore.Id)
                     };
 
                     if (!processPaymentRequest.IsRecurringPayment)
