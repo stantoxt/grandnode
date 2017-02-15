@@ -127,7 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ShippingByWeightSettings.cs" />
-    <Compile Include="Controllers\ShippingByWeightController.cs" />
+    <Compile Include="Controllers\ByWeightShippingController.cs" />
     <Compile Include="DependencyRegistrar.cs" />
     <Compile Include="Domain\ShippingByWeightRecord.cs" />
     <Compile Include="ByWeightShippingComputationMethod.cs" />

@@ -264,6 +264,11 @@ namespace Grand.Plugin.Shipping.ByWeight
             base.Uninstall();
         }
 
+        public Type GetControllerType()
+        {
+            return typeof(Controllers.ByWeightShippingController);
+        }
+
         #endregion
 
         #region Properties

@@ -43,7 +43,7 @@ namespace Grand.Services.Orders
     public partial class OrderProcessingService : IOrderProcessingService
     {
         #region Fields
-        
+
         private readonly IOrderService _orderService;
         private readonly IWebHelper _webHelper;
         private readonly ILocalizationService _localizationService;
@@ -83,6 +83,7 @@ namespace Grand.Services.Orders
         private readonly TaxSettings _taxSettings;
         private readonly LocalizationSettings _localizationSettings;
         private readonly CurrencySettings _currencySettings;
+        private readonly IStoreContext _storeContext;
 
         #endregion
 
@@ -128,6 +129,7 @@ namespace Grand.Services.Orders
         /// <param name="taxSettings">Tax settings</param>
         /// <param name="localizationSettings">Localization settings</param>
         /// <param name="currencySettings">Currency settings</param>
+        /// <param name="storeContext">Store context</param>
         public OrderProcessingService(IOrderService orderService,
             IWebHelper webHelper,
             ILocalizationService localizationService,
@@ -166,7 +168,8 @@ namespace Grand.Services.Orders
             OrderSettings orderSettings,
             TaxSettings taxSettings,
             LocalizationSettings localizationSettings,
-            CurrencySettings currencySettings)
+            CurrencySettings currencySettings,
+            IStoreContext storeContext)
         {
             this._orderService = orderService;
             this._webHelper = webHelper;
@@ -207,6 +210,7 @@ namespace Grand.Services.Orders
             this._taxSettings = taxSettings;
             this._localizationSettings = localizationSettings;
             this._currencySettings = currencySettings;
+            this._storeContext = storeContext;
         }
 
         #endregion
@@ -225,12 +229,12 @@ namespace Grand.Services.Orders
             public Customer Customer { get; set; }
             public Language CustomerLanguage { get; set; }
             public string AffiliateId { get; set; }
-            public TaxDisplayType CustomerTaxDisplayType {get; set; }
+            public TaxDisplayType CustomerTaxDisplayType { get; set; }
             public string CustomerCurrencyCode { get; set; }
             public decimal CustomerCurrencyRate { get; set; }
 
             public Address BillingAddress { get; set; }
-            public Address ShippingAddress {get; set; }
+            public Address ShippingAddress { get; set; }
             public ShippingStatus ShippingStatus { get; set; }
             public string ShippingMethodName { get; set; }
             public string ShippingRateComputationMethodSystemName { get; set; }
@@ -253,11 +257,11 @@ namespace Grand.Services.Orders
             public decimal OrderSubTotalDiscountExclTax { get; set; }
             public decimal OrderShippingTotalInclTax { get; set; }
             public decimal OrderShippingTotalExclTax { get; set; }
-            public decimal PaymentAdditionalFeeInclTax {get; set; }
+            public decimal PaymentAdditionalFeeInclTax { get; set; }
             public decimal PaymentAdditionalFeeExclTax { get; set; }
-            public decimal OrderTaxTotal  {get; set; }
-            public string VatNumber {get; set; }
-            public string TaxRates {get; set; }
+            public decimal OrderTaxTotal { get; set; }
+            public string VatNumber { get; set; }
+            public string TaxRates { get; set; }
             public decimal OrderDiscountAmount { get; set; }
             public int RedeemedRewardPoints { get; set; }
             public decimal RedeemedRewardPointsAmount { get; set; }
@@ -453,7 +457,7 @@ namespace Grand.Services.Orders
             {
                 details.CustomerTaxDisplayType = details.InitialOrder.CustomerTaxDisplayType;
             }
-            
+
             //sub total
             if (!processPaymentRequest.IsRecurringPayment)
             {
@@ -515,7 +519,7 @@ namespace Grand.Services.Orders
 
                         //clone shipping address
                         details.ShippingAddress = (Address)details.Customer.ShippingAddress.Clone();
-                        if (!String.IsNullOrEmpty(details.ShippingAddress.CountryId)) 
+                        if (!String.IsNullOrEmpty(details.ShippingAddress.CountryId))
                         {
                             var country = EngineContext.Current.Resolve<ICountryService>().GetCountryById(details.ShippingAddress.CountryId);
                             if (country != null)
@@ -738,7 +742,7 @@ namespace Grand.Services.Orders
         /// <param name="activate">A value indicating whether to activate gift cards; true - activate, false - deactivate</param>
         protected virtual void SetActivatedValueForPurchasedGiftCards(Order order, bool activate)
         {
-            var giftCards = _giftCardService.GetAllGiftCards(purchasedWithOrderId: order.Id, 
+            var giftCards = _giftCardService.GetAllGiftCards(purchasedWithOrderId: order.Id,
                 isGiftCardActivated: !activate);
             foreach (var gc in giftCards)
             {
@@ -796,12 +800,12 @@ namespace Grand.Services.Orders
 
             //order notes, notifications
             _orderService.InsertOrderNote(new OrderNote
-                {
-                    Note = string.Format("Order status has been changed to {0}", os.ToString()),
-                    DisplayToCustomer = false,
-                    OrderId = order.Id,
-                    CreatedOnUtc = DateTime.UtcNow
-                });
+            {
+                Note = string.Format("Order status has been changed to {0}", os.ToString()),
+                DisplayToCustomer = false,
+                OrderId = order.Id,
+                CreatedOnUtc = DateTime.UtcNow
+            });
 
             if (prevOrderStatus != OrderStatus.Complete &&
                 os == OrderStatus.Complete
@@ -932,7 +936,7 @@ namespace Grand.Services.Orders
                 {
                     if (attributeValue.AttributeValueType == AttributeValueType.AssociatedToProduct)
                     {
-                       purchasedProductIds.Add(attributeValue.AssociatedProductId);
+                        purchasedProductIds.Add(attributeValue.AssociatedProductId);
                     }
                 }
             }
@@ -1089,7 +1093,7 @@ namespace Grand.Services.Orders
 
                 //prepare order details
                 var details = PreparePlaceOrderDetails(processPaymentRequest);
-                    
+
                 #region Payment workflow
 
 
@@ -1145,7 +1149,7 @@ namespace Grand.Services.Orders
                                 processPaymentRequest.CreditCardExpireMonth = details.InitialOrder.AllowStoringCreditCardNumber ? Convert.ToInt32(_encryptionService.DecryptText(details.InitialOrder.CardExpirationMonth)) : 0;
                                 processPaymentRequest.CreditCardExpireYear = details.InitialOrder.AllowStoringCreditCardNumber ? Convert.ToInt32(_encryptionService.DecryptText(details.InitialOrder.CardExpirationYear)) : 0;
                             }
-                            catch {}
+                            catch { }
 
                             var recurringPaymentType = _paymentService.GetRecurringPaymentType(processPaymentRequest.PaymentMethodSystemName);
                             switch (recurringPaymentType)
@@ -1240,7 +1244,9 @@ namespace Grand.Services.Orders
                         CustomValuesXml = processPaymentRequest.SerializeCustomValues(),
                         VatNumber = details.VatNumber,
                         UrlReferrer = details.Customer.GetAttribute<string>(SystemCustomerAttributeNames.LastUrlReferrer),
-                        CreatedOnUtc = DateTime.UtcNow
+                        CreatedOnUtc = DateTime.UtcNow,
+                        ShippingOptionAttributeDescription = details.Customer.GetAttribute<string>(SystemCustomerAttributeNames.ShippingOptionAttributeDescription, _storeContext.CurrentStore.Id),
+                        ShippingOptionAttributeXml = details.Customer.GetAttribute<string>(SystemCustomerAttributeNames.ShippingOptionAttributeXml, _storeContext.CurrentStore.Id)
                     };
 
                     if (!processPaymentRequest.IsRecurringPayment)
@@ -1344,7 +1350,7 @@ namespace Grand.Services.Orders
                         //product also purchased
                         _orderService.InsertProductAlsoPurchased(order);
 
-                        if(!details.Customer.IsHasOrders)
+                        if (!details.Customer.IsHasOrders)
                         {
                             details.Customer.IsHasOrders = true;
                             _customerService.UpdateHasOrders(details.Customer.Id);
@@ -1710,7 +1716,7 @@ namespace Grand.Services.Orders
                 foreach (var orderItem in order.OrderItems)
                 {
                     var product = _productService.GetProductById(orderItem.ProductId);
-                    if(product!=null)
+                    if (product != null)
                         _productService.AdjustInventory(product, orderItem.Quantity, orderItem.AttributesXml);
                 }
 
@@ -1836,7 +1842,7 @@ namespace Grand.Services.Orders
 
                     //notify a store owner
                     _workflowMessageService
-                        .SendRecurringPaymentCancelledStoreOwnerNotification(recurringPayment, 
+                        .SendRecurringPaymentCancelledStoreOwnerNotification(recurringPayment,
                         _localizationSettings.DefaultAdminLanguageId);
                 }
             }
@@ -1937,7 +1943,7 @@ namespace Grand.Services.Orders
             //process products with "Multiple warehouse" support enabled
             foreach (var item in shipment.ShipmentItems)
             {
-                var orderItem = order.OrderItems.Where(x => x.Id == item.OrderItemId).FirstOrDefault(); 
+                var orderItem = order.OrderItems.Where(x => x.Id == item.OrderItemId).FirstOrDefault();
                 var product = _productService.GetProductByIdIncludeArch(orderItem.ProductId);
                 _productService.BookReservedInventory(product, item.WarehouseId, -item.Quantity);
             }
@@ -1951,12 +1957,12 @@ namespace Grand.Services.Orders
 
             //add a note
             _orderService.InsertOrderNote(new OrderNote
-                {
-                    Note = string.Format("Shipment# {0} has been sent", shipment.Id),
-                    DisplayToCustomer = false,
-                    CreatedOnUtc = DateTime.UtcNow,
-                    OrderId = order.Id,
-                });
+            {
+                Note = string.Format("Shipment# {0} has been sent", shipment.Id),
+                DisplayToCustomer = false,
+                CreatedOnUtc = DateTime.UtcNow,
+                OrderId = order.Id,
+            });
 
             if (notifyCustomer)
             {
@@ -2229,7 +2235,7 @@ namespace Grand.Services.Orders
                     });
 
                     CheckOrderStatus(order);
-     
+
                     if (order.PaymentStatus == PaymentStatus.Paid)
                     {
                         ProcessOrderPaid(order);
@@ -2318,7 +2324,7 @@ namespace Grand.Services.Orders
             });
 
             CheckOrderStatus(order);
-   
+
             if (order.PaymentStatus == PaymentStatus.Paid)
             {
                 ProcessOrderPaid(order);
@@ -2354,7 +2360,7 @@ namespace Grand.Services.Orders
 
             return false;
         }
-        
+
         /// <summary>
         /// Refunds an order (from admin panel)
         /// </summary>
@@ -2740,7 +2746,7 @@ namespace Grand.Services.Orders
         {
             if (order == null)
                 throw new ArgumentNullException("order");
-            
+
             if (!CanPartiallyRefundOffline(order, amountToRefund))
                 throw new GrandException("You can't partially refund (offline) this order");
 
@@ -2958,7 +2964,7 @@ namespace Grand.Services.Orders
                 }
             }
         }
-        
+
         /// <summary>
         /// Check whether return request is allowed
         /// </summary>
@@ -2988,14 +2994,14 @@ namespace Grand.Services.Orders
                     return false;
 
                 var qtyDelivery = shipments.Where(x => x.DeliveryDateUtc.HasValue).SelectMany(x => x.ShipmentItems).Where(x => x.OrderItemId == item.Id).Sum(x => x.Quantity);
-                var qtyReturn = _returnRequestService.SearchReturnRequests(customerId:order.CustomerId, orderItemId: item.Id).Sum(x=>x.Quantity);
+                var qtyReturn = _returnRequestService.SearchReturnRequests(customerId: order.CustomerId, orderItemId: item.Id).Sum(x => x.Quantity);
 
                 if (!product.NotReturnable && qtyDelivery - qtyReturn > 0)
                     return true;
             }
             return false;
         }
-        
+
 
 
         /// <summary>

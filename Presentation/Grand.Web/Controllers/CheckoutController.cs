@@ -36,7 +36,7 @@ namespace Grand.Web.Controllers
     [NopHttpsRequirement(SslRequirement.Yes)]
     public partial class CheckoutController : BasePublicController
     {
-		#region Fields
+        #region Fields
 
         private readonly IWorkContext _workContext;
         private readonly IStoreContext _storeContext;
@@ -58,7 +58,7 @@ namespace Grand.Web.Controllers
         private readonly ILogger _logger;
         private readonly IOrderService _orderService;
         private readonly IWebHelper _webHelper;
-        private readonly HttpContextBase _httpContext; 
+        private readonly HttpContextBase _httpContext;
         private readonly IAddressAttributeParser _addressAttributeParser;
         private readonly IAddressAttributeService _addressAttributeService;
         private readonly IAddressAttributeFormatter _addressAttributeFormatter;
@@ -72,22 +72,22 @@ namespace Grand.Web.Controllers
 
         #endregion
 
-		#region Constructors
+        #region Constructors
 
         public CheckoutController(IWorkContext workContext,
             IStoreContext storeContext,
             IStoreMappingService storeMappingService,
-            IShoppingCartService shoppingCartService, 
-            ILocalizationService localizationService, 
-            ITaxService taxService, 
-            ICurrencyService currencyService, 
-            IPriceFormatter priceFormatter, 
+            IShoppingCartService shoppingCartService,
+            ILocalizationService localizationService,
+            ITaxService taxService,
+            ICurrencyService currencyService,
+            IPriceFormatter priceFormatter,
             IOrderProcessingService orderProcessingService,
-            ICustomerService customerService, 
+            ICustomerService customerService,
             IGenericAttributeService genericAttributeService,
             ICountryService countryService,
             IStateProvinceService stateProvinceService,
-            IShippingService shippingService, 
+            IShippingService shippingService,
             IPaymentService paymentService,
             IPluginFinder pluginFinder,
             IOrderTotalCalculationService orderTotalCalculationService,
@@ -99,7 +99,7 @@ namespace Grand.Web.Controllers
             IAddressAttributeService addressAttributeService,
             IAddressAttributeFormatter addressAttributeFormatter,
             IRewardPointsService rewardPointsService,
-            OrderSettings orderSettings, 
+            OrderSettings orderSettings,
             RewardPointsSettings rewardPointsSettings,
             PaymentSettings paymentSettings,
             ShippingSettings shippingSettings,
@@ -155,7 +155,7 @@ namespace Grand.Web.Controllers
 
         [NonAction]
         protected virtual CheckoutBillingAddressModel PrepareBillingAddressModel(
-            IList<ShoppingCartItem> cart, string selectedCountryId = null, 
+            IList<ShoppingCartItem> cart, string selectedCountryId = null,
             bool prePopulateNewAddressWithCustomerFields = false, string overrideAttributesXml = "")
         {
             var model = new CheckoutBillingAddressModel();
@@ -166,9 +166,9 @@ namespace Grand.Web.Controllers
 
             var addresses = _workContext.CurrentCustomer.Addresses
                 .Where(a => a.CountryId == "" ||
-                (_countryService.GetCountryById(a.CountryId)!=null ? _countryService.GetCountryById(a.CountryId).AllowsBilling : false)
+                (_countryService.GetCountryById(a.CountryId) != null ? _countryService.GetCountryById(a.CountryId).AllowsBilling : false)
                 )
-                .Where(a => a.CountryId == "" || 
+                .Where(a => a.CountryId == "" ||
                 _storeMappingService.Authorize((_countryService.GetCountryById(a.CountryId))
                 ))
                 .ToList();
@@ -176,8 +176,8 @@ namespace Grand.Web.Controllers
             {
                 var addressModel = new AddressModel();
                 addressModel.PrepareModel(
-                    address: address, 
-                    excludeProperties: false, 
+                    address: address,
+                    excludeProperties: false,
                     addressSettings: _addressSettings,
                     addressAttributeFormatter: _addressAttributeFormatter);
                 model.ExistingAddresses.Add(addressModel);
@@ -185,7 +185,7 @@ namespace Grand.Web.Controllers
 
             //new address
             model.NewAddress.CountryId = selectedCountryId;
-            model.NewAddress.PrepareModel(address: 
+            model.NewAddress.PrepareModel(address:
                 null,
                 excludeProperties: false,
                 addressSettings: _addressSettings,
@@ -201,7 +201,7 @@ namespace Grand.Web.Controllers
         }
 
         [NonAction]
-        protected virtual CheckoutShippingAddressModel PrepareShippingAddressModel(string selectedCountryId = null, 
+        protected virtual CheckoutShippingAddressModel PrepareShippingAddressModel(string selectedCountryId = null,
             bool prePopulateNewAddressWithCustomerFields = false, string overrideAttributesXml = "")
         {
             var model = new CheckoutShippingAddressModel();
@@ -254,7 +254,7 @@ namespace Grand.Web.Controllers
                 //a.Country.AllowsShipping
                 )
                 //enabled for the current store
-                .Where(a => a.CountryId == "" || 
+                .Where(a => a.CountryId == "" ||
                 _storeMappingService.Authorize(_countryService.GetCountryById(a.CountryId)))
                 .ToList();
             foreach (var address in addresses)
@@ -305,12 +305,12 @@ namespace Grand.Web.Controllers
                 foreach (var shippingOption in getShippingOptionResponse.ShippingOptions)
                 {
                     var soModel = new CheckoutShippingMethodModel.ShippingMethodModel
-                                      {
-                                          Name = shippingOption.Name,
-                                          Description = shippingOption.Description,
-                                          ShippingRateComputationMethodSystemName = shippingOption.ShippingRateComputationMethodSystemName,
-                                          ShippingOption = shippingOption,
-                                      };
+                    {
+                        Name = shippingOption.Name,
+                        Description = shippingOption.Description,
+                        ShippingRateComputationMethodSystemName = shippingOption.ShippingRateComputationMethodSystemName,
+                        ShippingOption = shippingOption,
+                    };
 
                     //adjust rate
                     List<Discount> appliedDiscounts;
@@ -330,11 +330,11 @@ namespace Grand.Web.Controllers
                 if (selectedShippingOption != null)
                 {
                     var shippingOptionToSelect = model.ShippingMethods.ToList()
-                        .Find( so =>
-                            !String.IsNullOrEmpty(so.Name) &&
-                            so.Name.Equals(selectedShippingOption.Name, StringComparison.InvariantCultureIgnoreCase) &&
-                            !String.IsNullOrEmpty(so.ShippingRateComputationMethodSystemName) &&
-                            so.ShippingRateComputationMethodSystemName.Equals(selectedShippingOption.ShippingRateComputationMethodSystemName, StringComparison.InvariantCultureIgnoreCase));
+                        .Find(so =>
+                           !String.IsNullOrEmpty(so.Name) &&
+                           so.Name.Equals(selectedShippingOption.Name, StringComparison.InvariantCultureIgnoreCase) &&
+                           !String.IsNullOrEmpty(so.ShippingRateComputationMethodSystemName) &&
+                           so.ShippingRateComputationMethodSystemName.Equals(selectedShippingOption.ShippingRateComputationMethodSystemName, StringComparison.InvariantCultureIgnoreCase));
                     if (shippingOptionToSelect != null)
                     {
                         shippingOptionToSelect.Selected = true;
@@ -376,7 +376,7 @@ namespace Grand.Web.Controllers
                 int rewardPointsBalance = _rewardPointsService.GetRewardPointsBalance(_workContext.CurrentCustomer.Id, _storeContext.CurrentStore.Id);
                 decimal rewardPointsAmountBase = _orderTotalCalculationService.ConvertRewardPointsToAmount(rewardPointsBalance);
                 decimal rewardPointsAmount = _currencyService.ConvertFromPrimaryStoreCurrency(rewardPointsAmountBase, _workContext.WorkingCurrency);
-                if (rewardPointsAmount > decimal.Zero && 
+                if (rewardPointsAmount > decimal.Zero &&
                     _orderTotalCalculationService.CheckMinimumRewardPointsToUseRequirement(rewardPointsBalance))
                 {
                     model.DisplayRewardPoints = true;
@@ -413,7 +413,7 @@ namespace Grand.Web.Controllers
 
                 model.PaymentMethods.Add(pmModel);
             }
-            
+
             //find a selected (previously) payment method
             var selectedPaymentMethodSystemName = _workContext.CurrentCustomer.GetAttribute<string>(
                 SystemCustomerAttributeNames.SelectedPaymentMethod, _storeContext.CurrentStore.Id);
@@ -465,7 +465,7 @@ namespace Grand.Web.Controllers
             }
             return model;
         }
-        
+
         [NonAction]
         protected virtual bool IsMinimumOrderPlacementIntervalValid(Customer customer)
         {
@@ -481,6 +481,25 @@ namespace Grand.Web.Controllers
 
             var interval = DateTime.Now - lastOrder.CreatedOnUtc;
             return interval.TotalSeconds > _orderSettings.MinimumOrderPlacementInterval;
+        }
+
+        [NonAction]
+        protected void ValidateShippingForm(FormCollection form, out List<string> warnings)
+        {
+            //call plugin, let it validate form, return warning messages
+            var shippingMethodName = form["shippingoption"].Split(new[] { "___" }, StringSplitOptions.RemoveEmptyEntries);
+
+            var shippingMethod = _shippingService.LoadShippingRateComputationMethodBySystemName(shippingMethodName[1]);
+            if (shippingMethod == null)
+                throw new Exception("Shipping method is not selected");
+
+            var shippingControllerType = shippingMethod.GetControllerType();
+            var shippingController = DependencyResolver.Current.GetService(shippingControllerType) as BaseShippingController;
+
+            warnings = shippingController.ValidateShippingForm(form).ToList();
+
+            foreach (var warning in warnings)
+                ModelState.AddModelError("", warning);
         }
 
         #endregion
@@ -529,7 +548,7 @@ namespace Grand.Web.Controllers
 
             if (_orderSettings.OnePageCheckoutEnabled)
                 return RedirectToRoute("CheckoutOnePage");
-            
+
             return RedirectToRoute("CheckoutBillingAddress");
         }
 
@@ -558,7 +577,7 @@ namespace Grand.Web.Controllers
             //disable "order completed" page?
             if (_orderSettings.DisableOrderCompletedPage)
             {
-                return RedirectToRoute("OrderDetails", new {orderId = order.Id});
+                return RedirectToRoute("OrderDetails", new { orderId = order.Id });
             }
 
             //model
@@ -630,7 +649,7 @@ namespace Grand.Web.Controllers
             if (_shippingSettings.ShipToSameAddress && shipToSameAddress && cart.RequiresShipping())
             {
                 _workContext.CurrentCustomer.ShippingAddress = _workContext.CurrentCustomer.BillingAddress;
-                _customerService.UpdateShippingAddress(address);                
+                _customerService.UpdateShippingAddress(address);
                 //reset selected shipping method (in case if "pick up in store" was selected)
                 _genericAttributeService.SaveAttribute<ShippingOption>(_workContext.CurrentCustomer, SystemCustomerAttributeNames.SelectedShippingOption, null, _storeContext.CurrentStore.Id);
                 _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, SystemCustomerAttributeNames.SelectedPickupPoint, "", _storeContext.CurrentStore.Id);
@@ -705,7 +724,7 @@ namespace Grand.Web.Controllers
 
 
             //If we got this far, something failed, redisplay form
-            model = PrepareBillingAddressModel(cart, 
+            model = PrepareBillingAddressModel(cart,
                 selectedCountryId: model.NewAddress.CountryId,
                 overrideAttributesXml: customAttributes);
             return View(model);
@@ -815,9 +834,9 @@ namespace Grand.Web.Controllers
                         pickUpInStoreShippingOption,
                         _storeContext.CurrentStore.Id);
 
-                    _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, 
-                        SystemCustomerAttributeNames.SelectedPickupPoint, 
-                        selectedPoint.Id, 
+                    _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer,
+                        SystemCustomerAttributeNames.SelectedPickupPoint,
+                        selectedPoint.Id,
                         _storeContext.CurrentStore.Id);
 
                     //load next step
@@ -868,7 +887,7 @@ namespace Grand.Web.Controllers
                 overrideAttributesXml: customAttributes);
             return View(model);
         }
-        
+
 
         public virtual ActionResult ShippingMethod()
         {
@@ -899,11 +918,11 @@ namespace Grand.Web.Controllers
                 model.ShippingMethods.Count == 1)
             {
                 //if we have only one shipping method, then a customer doesn't have to choose a shipping method
-                _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, 
+                _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer,
                     SystemCustomerAttributeNames.SelectedShippingOption,
                     model.ShippingMethods.First().ShippingOption,
                     _storeContext.CurrentStore.Id);
-            
+
                 return RedirectToRoute("CheckoutPaymentMethod");
             }
 
@@ -912,7 +931,7 @@ namespace Grand.Web.Controllers
         [HttpPost, ActionName("ShippingMethod")]
         [FormValueRequired("nextstep")]
         [ValidateInput(false)]
-        public virtual ActionResult SelectShippingMethod(string shippingoption)
+        public virtual ActionResult SelectShippingMethod(FormCollection form)
         {
             //validation
             var cart = _workContext.CurrentCustomer.ShoppingCartItems
@@ -936,44 +955,53 @@ namespace Grand.Web.Controllers
             }
 
             //parse selected method 
-            if (String.IsNullOrEmpty(shippingoption))
+            if (String.IsNullOrEmpty(form["shippingoption"]))
                 return ShippingMethod();
-            var splittedOption = shippingoption.Split(new [] { "___" }, StringSplitOptions.RemoveEmptyEntries);
+            var splittedOption = form["shippingoption"].Split(new[] { "___" }, StringSplitOptions.RemoveEmptyEntries);
             if (splittedOption.Length != 2)
                 return ShippingMethod();
             string selectedName = splittedOption[0];
             string shippingRateComputationMethodSystemName = splittedOption[1];
-            
-            //find it
-            //performance optimization. try cache first
-            var shippingOptions = _workContext.CurrentCustomer.GetAttribute<List<ShippingOption>>(SystemCustomerAttributeNames.OfferedShippingOptions, _storeContext.CurrentStore.Id);
-            if (shippingOptions == null || shippingOptions.Count == 0)
+
+            //validate customer's input
+            List<string> warnings;
+            ValidateShippingForm(form, out warnings);
+
+            if (ModelState.IsValid)
             {
-                //not found? let's load them using shipping service
-                shippingOptions = _shippingService
-                    .GetShippingOptions(cart, _workContext.CurrentCustomer.ShippingAddress, shippingRateComputationMethodSystemName, _storeContext.CurrentStore.Id)
-                    .ShippingOptions
-                    .ToList();
-            }
-            else
-            {
-                //loaded cached results. let's filter result by a chosen shipping rate computation method
-                shippingOptions = shippingOptions.Where(so => so.ShippingRateComputationMethodSystemName.Equals(shippingRateComputationMethodSystemName, StringComparison.InvariantCultureIgnoreCase))
-                    .ToList();
+                //find it
+                //performance optimization. try cache first
+                var shippingOptions = _workContext.CurrentCustomer.GetAttribute<List<ShippingOption>>(SystemCustomerAttributeNames.OfferedShippingOptions, _storeContext.CurrentStore.Id);
+                if (shippingOptions == null || shippingOptions.Count == 0)
+                {
+                    //not found? let's load them using shipping service
+                    shippingOptions = _shippingService
+                        .GetShippingOptions(cart, _workContext.CurrentCustomer.ShippingAddress, shippingRateComputationMethodSystemName, _storeContext.CurrentStore.Id)
+                        .ShippingOptions
+                        .ToList();
+                }
+                else
+                {
+                    //loaded cached results. let's filter result by a chosen shipping rate computation method
+                    shippingOptions = shippingOptions.Where(so => so.ShippingRateComputationMethodSystemName.Equals(shippingRateComputationMethodSystemName, StringComparison.InvariantCultureIgnoreCase))
+                        .ToList();
+                }
+
+                var shippingOption = shippingOptions
+                    .Find(so => !String.IsNullOrEmpty(so.Name) && so.Name.Equals(selectedName, StringComparison.InvariantCultureIgnoreCase));
+                if (shippingOption == null)
+                    return ShippingMethod();
+
+                //save
+                _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, SystemCustomerAttributeNames.SelectedShippingOption, shippingOption, _storeContext.CurrentStore.Id);
+
+                return RedirectToRoute("CheckoutPaymentMethod");
             }
 
-            var shippingOption = shippingOptions
-                .Find(so => !String.IsNullOrEmpty(so.Name) && so.Name.Equals(selectedName, StringComparison.InvariantCultureIgnoreCase));
-            if (shippingOption == null)
-                return ShippingMethod();
-
-            //save
-            _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, SystemCustomerAttributeNames.SelectedShippingOption, shippingOption, _storeContext.CurrentStore.Id);
-            
-            return RedirectToRoute("CheckoutPaymentMethod");
+            var model = PrepareShippingMethodModel(cart, _workContext.CurrentCustomer.ShippingAddress);
+            return View(model);
         }
-        
-        
+
         public virtual ActionResult PaymentMethod()
         {
             //validation
@@ -1019,7 +1047,7 @@ namespace Grand.Web.Controllers
                 //so customer doesn't have to choose a payment method
 
                 _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer,
-                    SystemCustomerAttributeNames.SelectedPaymentMethod, 
+                    SystemCustomerAttributeNames.SelectedPaymentMethod,
                     paymentMethodModel.PaymentMethods[0].PaymentMethodSystemName,
                     _storeContext.CurrentStore.Id);
                 return RedirectToRoute("CheckoutPaymentInfo");
@@ -1067,7 +1095,7 @@ namespace Grand.Web.Controllers
                 return PaymentMethod();
 
             var paymentMethodInst = _paymentService.LoadPaymentMethodBySystemName(paymentmethod);
-            if (paymentMethodInst == null || 
+            if (paymentMethodInst == null ||
                 !paymentMethodInst.IsPaymentMethodActive(_paymentSettings) ||
                 !_pluginFinder.AuthenticateStore(paymentMethodInst.PluginDescriptor, _storeContext.CurrentStore.Id))
                 return PaymentMethod();
@@ -1075,7 +1103,7 @@ namespace Grand.Web.Controllers
             //save
             _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer,
                 SystemCustomerAttributeNames.SelectedPaymentMethod, paymentmethod, _storeContext.CurrentStore.Id);
-            
+
             return RedirectToRoute("CheckoutPaymentInfo");
         }
 
@@ -1113,7 +1141,7 @@ namespace Grand.Web.Controllers
 
             //Check whether payment info should be skipped
             if (paymentMethod.SkipPaymentInfo ||
-                    (paymentMethod.PaymentMethodType == PaymentMethodType.Redirection 
+                    (paymentMethod.PaymentMethodType == PaymentMethodType.Redirection
                     && _paymentSettings.SkipPaymentInfoStepForRedirectionPaymentMethods))
             {
                 //skip payment info page
@@ -1184,7 +1212,7 @@ namespace Grand.Web.Controllers
             var model = PreparePaymentInfoModel(paymentMethod);
             return View(model);
         }
-        
+
 
         public virtual ActionResult Confirm()
         {
@@ -1235,10 +1263,10 @@ namespace Grand.Web.Controllers
                     //Check whether payment workflow is required
                     if (IsPaymentWorkflowRequired(cart))
                         return RedirectToRoute("CheckoutPaymentInfo");
-                    
+
                     processPaymentRequest = new ProcessPaymentRequest();
                 }
-                
+
                 //prevent 2 orders being placed within an X seconds time frame
                 if (!IsMinimumOrderPlacementIntervalValid(_workContext.CurrentCustomer))
                     throw new Exception(_localizationService.GetResource("Checkout.MinOrderPlacementInterval"));
@@ -1264,10 +1292,10 @@ namespace Grand.Web.Controllers
                         //redirection or POST has been done in PostProcessPayment
                         return Content("Redirected");
                     }
-                    
+
                     return RedirectToRoute("CheckoutCompleted", new { orderId = placeOrderResult.PlacedOrder.Id });
                 }
-                
+
                 foreach (var error in placeOrderResult.Errors)
                     model.Warnings.Add(error);
             }
@@ -1285,7 +1313,7 @@ namespace Grand.Web.Controllers
         [ChildActionOnly]
         public virtual ActionResult CheckoutProgress(CheckoutProgressStep step)
         {
-            var model = new CheckoutProgressModel {CheckoutProgressStep = step};
+            var model = new CheckoutProgressModel { CheckoutProgressStep = step };
             return PartialView(model);
         }
 
@@ -1362,7 +1390,7 @@ namespace Grand.Web.Controllers
 
                     return OpcLoadStepAfterPaymentMethod(paymentMethodInst, cart);
                 }
-                
+
                 //customer have to choose a payment method
                 return Json(new
                 {
@@ -1395,7 +1423,7 @@ namespace Grand.Web.Controllers
         protected JsonResult OpcLoadStepAfterPaymentMethod(IPaymentMethod paymentMethod, List<ShoppingCartItem> cart)
         {
             if (paymentMethod.SkipPaymentInfo ||
-                    (paymentMethod.PaymentMethodType == PaymentMethodType.Redirection 
+                    (paymentMethod.PaymentMethodType == PaymentMethodType.Redirection
                     && _paymentSettings.SkipPaymentInfoStepForRedirectionPaymentMethods))
             {
                 //skip payment info page
@@ -1556,7 +1584,7 @@ namespace Grand.Web.Controllers
                 if (cart.RequiresShipping())
                 {
                     //shipping is required
-                    
+
                     var model = new CheckoutBillingAddressModel();
                     TryUpdateModel(model);
                     if (_shippingSettings.ShipToSameAddress && model.ShipToSameAddress)
@@ -1578,13 +1606,13 @@ namespace Grand.Web.Controllers
 
                         return Json(new
                         {
-                           update_section = new UpdateSectionJsonModel
+                            update_section = new UpdateSectionJsonModel
                             {
                                 name = "shipping",
                                 html = this.RenderPartialViewToString("OpcShippingAddress", shippingAddressModel)
                             },
                             goto_section = "shipping"
-                         });
+                        });
                     }
 
                 }
@@ -1774,7 +1802,7 @@ namespace Grand.Web.Controllers
 
                 if ((_workContext.CurrentCustomer.IsGuest() && !_orderSettings.AnonymousCheckoutAllowed))
                     throw new Exception("Anonymous checkout is not allowed");
-                
+
                 if (!cart.RequiresShipping())
                     throw new Exception("Shipping is not required");
 
@@ -1782,40 +1810,50 @@ namespace Grand.Web.Controllers
                 string shippingoption = form["shippingoption"];
                 if (String.IsNullOrEmpty(shippingoption))
                     throw new Exception("Selected shipping method can't be parsed");
-                var splittedOption = shippingoption.Split(new [] { "___" }, StringSplitOptions.RemoveEmptyEntries);
+                var splittedOption = shippingoption.Split(new[] { "___" }, StringSplitOptions.RemoveEmptyEntries);
                 if (splittedOption.Length != 2)
                     throw new Exception("Selected shipping method can't be parsed");
                 string selectedName = splittedOption[0];
                 string shippingRateComputationMethodSystemName = splittedOption[1];
-                
-                //find it
-                //performance optimization. try cache first
-                var shippingOptions = _workContext.CurrentCustomer.GetAttribute<List<ShippingOption>>(SystemCustomerAttributeNames.OfferedShippingOptions, _storeContext.CurrentStore.Id);
-                if (shippingOptions == null || shippingOptions.Count == 0)
-                {
-                    //not found? let's load them using shipping service
-                    shippingOptions = _shippingService
-                        .GetShippingOptions(cart, _workContext.CurrentCustomer.ShippingAddress, shippingRateComputationMethodSystemName, _storeContext.CurrentStore.Id)
-                        .ShippingOptions
-                        .ToList();
-                }
-                else
-                {
-                    //loaded cached results. let's filter result by a chosen shipping rate computation method
-                    shippingOptions = shippingOptions.Where(so => so.ShippingRateComputationMethodSystemName.Equals(shippingRateComputationMethodSystemName, StringComparison.InvariantCultureIgnoreCase))
-                        .ToList();
-                }
-                
-                var shippingOption = shippingOptions
-                    .Find(so => !String.IsNullOrEmpty(so.Name) && so.Name.Equals(selectedName, StringComparison.InvariantCultureIgnoreCase));
-                if (shippingOption == null)
-                    throw new Exception("Selected shipping method can't be loaded");
 
-                //save
-                _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, SystemCustomerAttributeNames.SelectedShippingOption, shippingOption, _storeContext.CurrentStore.Id);
-                
-                //load next step
-                return OpcLoadStepAfterShippingMethod(cart);
+                //validate customer's input
+                List<string> warnings;
+                ValidateShippingForm(form, out warnings);
+
+                if (ModelState.IsValid)
+                {
+                    //find it
+                    //performance optimization. try cache first
+                    var shippingOptions = _workContext.CurrentCustomer.GetAttribute<List<ShippingOption>>(SystemCustomerAttributeNames.OfferedShippingOptions, _storeContext.CurrentStore.Id);
+                    if (shippingOptions == null || shippingOptions.Count == 0)
+                    {
+                        //not found? let's load them using shipping service
+                        shippingOptions = _shippingService
+                            .GetShippingOptions(cart, _workContext.CurrentCustomer.ShippingAddress, shippingRateComputationMethodSystemName, _storeContext.CurrentStore.Id)
+                            .ShippingOptions
+                            .ToList();
+                    }
+                    else
+                    {
+                        //loaded cached results. let's filter result by a chosen shipping rate computation method
+                        shippingOptions = shippingOptions.Where(so => so.ShippingRateComputationMethodSystemName.Equals(shippingRateComputationMethodSystemName, StringComparison.InvariantCultureIgnoreCase))
+                            .ToList();
+                    }
+
+                    var shippingOption = shippingOptions
+                        .Find(so => !String.IsNullOrEmpty(so.Name) && so.Name.Equals(selectedName, StringComparison.InvariantCultureIgnoreCase));
+                    if (shippingOption == null)
+                        throw new Exception("Selected shipping method can't be loaded");
+
+                    //save
+                    _genericAttributeService.SaveAttribute(_workContext.CurrentCustomer, SystemCustomerAttributeNames.SelectedShippingOption, shippingOption, _storeContext.CurrentStore.Id);
+
+                    //load next step
+                    return OpcLoadStepAfterShippingMethod(cart);
+                }
+
+                var message = warnings.ToJson().Replace("[", "").Replace("]", "").Replace("\"", "");
+                return Json(new { error = 1, message = message });
             }
             catch (Exception exc)
             {
@@ -2041,14 +2079,14 @@ namespace Grand.Web.Controllers
 
                     _paymentService.PostProcessPayment(postProcessPaymentRequest);
                     //success
-                    return Json(new {success = 1});
+                    return Json(new { success = 1 });
                 }
-                
+
                 //error
                 var confirmOrderModel = new CheckoutConfirmModel();
                 foreach (var error in placeOrderResult.Errors)
-                    confirmOrderModel.Warnings.Add(error); 
-                    
+                    confirmOrderModel.Warnings.Add(error);
+
                 return Json(new
                 {
                     update_section = new UpdateSectionJsonModel
@@ -2084,7 +2122,7 @@ namespace Grand.Web.Controllers
                 if (order == null)
                     return RedirectToRoute("HomePage");
 
-                
+
                 var paymentMethod = _paymentService.LoadPaymentMethodBySystemName(order.PaymentMethodSystemName);
                 if (paymentMethod == null)
                     return RedirectToRoute("HomePage");
@@ -2110,7 +2148,7 @@ namespace Grand.Web.Controllers
                     //redirection or POST has been done in PostProcessPayment
                     return Content("Redirected");
                 }
-                
+
                 //if no redirection has been done (to a third-party payment page)
                 //theoretically it's not possible
                 return RedirectToRoute("CheckoutCompleted", new { orderId = order.Id });

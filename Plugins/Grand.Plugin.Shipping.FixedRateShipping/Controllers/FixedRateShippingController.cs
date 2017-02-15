@@ -13,13 +13,13 @@ using Grand.Web.Framework.Security;
 namespace Grand.Plugin.Shipping.FixedRateShipping.Controllers
 {
     [AdminAuthorize]
-    public class ShippingFixedRateController : BasePluginController
+    public class FixedRateShippingController : BaseShippingController
     {
         private readonly IShippingService _shippingService;
         private readonly ISettingService _settingService;
         private readonly IPermissionService _permissionService;
 
-        public ShippingFixedRateController(IShippingService shippingServicee,
+        public FixedRateShippingController(IShippingService shippingServicee,
             ISettingService settingService, 
             IPermissionService permissionService)
         {
@@ -87,6 +87,18 @@ namespace Grand.Plugin.Shipping.FixedRateShipping.Controllers
         {
             var rate = this._settingService.GetSettingByKey<decimal>(string.Format("ShippingRateComputationMethod.FixedRate.Rate.ShippingMethodId{0}", shippingMethodId));
             return rate;
+        }
+
+        public override IList<string> ValidateShippingForm(FormCollection form)
+        {
+            //you can implement here any validation logic
+            return new List<string>();
+        }
+
+        public override string GetFormPartialView(string shippingOption)
+        {
+            //you can use here any view 
+            return "";
         }
     }
 }

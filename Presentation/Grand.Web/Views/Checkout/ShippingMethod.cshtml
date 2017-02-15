@@ -6,48 +6,83 @@
     //title
     Html.AddTitleParts(T("PageTitle.Checkout").Text);
 }
+
+<script type="text/javascript">
+    function loadPartialView(arg_value) {
+        var result = arg_value.split("___");
+        var argument = result[0];
+        var controller = result[1].replace('Shipping.', '');
+
+        var url = '@(Request.Url.AbsoluteUri.Replace(Request.Url.PathAndQuery, string.Empty))' + "/" + controller + '/GetFormPartialView?shippingOption=' + argument;
+
+        $.ajax({
+            url: url,
+            success: function (data) {
+                $('#shipping_form').html(data);
+            }
+        });
+    }
+</script>
+
 <div class="page checkout-page shipping-method-page">
     @Html.Action("CheckoutProgress", "Checkout", new { step = CheckoutProgressStep.Shipping })
-        <h1 class="generalTitle">@T("Checkout.SelectShippingMethod")</h1>
-        <div class="shipping-method">
-            @using (Html.BeginRouteForm("CheckoutShippingMethod", FormMethod.Post))
+    <h1 class="generalTitle">@T("Checkout.SelectShippingMethod")</h1>
+    <div class="shipping-method">
+        @using (Html.BeginRouteForm("CheckoutShippingMethod", FormMethod.Post))
             {
-                @Html.Widget("checkout_shipping_method_top")
-                if (Model.Warnings.Count == 0)
+            @Html.Widget("checkout_shipping_method_top")
+            if (Model.Warnings.Count == 0)
+            {
+                for (int i = 0; i < Model.ShippingMethods.Count; i++)
                 {
+                    var shippingMethod = Model.ShippingMethods[i];
+
+                    if (shippingMethod.Selected)
+                    {
+                        <script type="text/javascript">
+                            $(document).ready(function () {
+                                loadPartialView('@(shippingMethod.Name)___@(shippingMethod.ShippingRateComputationMethodSystemName)');
+                            });
+                        </script>
+                    }
                     <ul class="method-list">
-                        @for (int i = 0; i < Model.ShippingMethods.Count; i++)
-                        {
-                            var shippingMethod = Model.ShippingMethods[i];
-                            <li>
-                                <label class="custom-control custom-checkbox">
-                                    <input id="shippingoption_@(i)" type="radio" name="shippingoption" value="@(shippingMethod.Name)___@(shippingMethod.ShippingRateComputationMethodSystemName)" checked="@shippingMethod.Selected" class="custom-control-input">
-                                    <span class="custom-control-indicator"></span>
-                                    <span for="shippingoption_@(i)" class="custom-control-description">
-                                        @T("Checkout.SelectShippingMethod.MethodAndFee", shippingMethod.Name, shippingMethod.Fee)
+                        <li>
+                            <label class="custom-control custom-checkbox">
+                                <input onclick="loadPartialView(value)"
+                                       id="shippingoption_@(i)"
+                                       class="custom-control-input"
+                                       type="radio"
+                                       name="shippingoption"
+                                       value="@(shippingMethod.Name)___@(shippingMethod.ShippingRateComputationMethodSystemName)"
+                                       checked="@shippingMethod.Selected" />
+                                <span class="custom-control-indicator"></span>
+                                <span for="shippingoption_@(i)" class="custom-control-description">
+                                    @T("Checkout.SelectShippingMethod.MethodAndFee", shippingMethod.Name, shippingMethod.Fee)
 
-                                        @if (!String.IsNullOrEmpty(shippingMethod.Description))
-                                        {
-                                            @Html.Raw(shippingMethod.Description)
-                                        }
+                                    @if (!String.IsNullOrEmpty(shippingMethod.Description))
+                                    {
+                                        @Html.Raw(shippingMethod.Description)
+                                    }
 
-                                    </span>
-                                </label>
-                            </li>
-                        }
+                                </span>
+                            </label>
+                        </li>
                     </ul>
+
+                }
                 if (Model.NotifyCustomerAboutShippingFromMultipleLocations)
                 {
                     <div class="multiple-locations">
                         @T("Checkout.ShippingMethod.ShippingFromMultipleLocations")
                     </div>
                 }
+                <div id="shipping_form"></div>
                 <div class="buttons">
                     <input type="submit" name="nextstep" value="@T("Checkout.NextButton")" class="btn btn-success mt-1 mb-1 shipping-method-next-step-button" />
                 </div>
-                }
-                else
-                {
+            }
+            else
+            {
                 <div class="message-error">
                     <ul>
                         @foreach (var warning in Model.Warnings)
@@ -56,12 +91,12 @@
                         }
                     </ul>
                 </div>
-                }
-                @Html.Widget("checkout_shipping_method_bottom")
             }
-        </div>
-        <div class="order-summary">
-                <h5 class="generalTitle"><strong>@T("Checkout.OrderSummary")</strong></h5>
-            @Html.Action("OrderSummary", "ShoppingCart")
-        </div>
+            @Html.Widget("checkout_shipping_method_bottom")
+        }
     </div>
+    <div class="order-summary">
+        <h5 class="generalTitle"><strong>@T("Checkout.OrderSummary")</strong></h5>
+        @Html.Action("OrderSummary", "ShoppingCart")
+    </div>
+</div>

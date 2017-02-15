@@ -22,7 +22,7 @@ using Grand.Web.Framework.Security;
 namespace Grand.Plugin.Shipping.ByWeight.Controllers
 {
     [AdminAuthorize]
-    public class ShippingByWeightController : BasePluginController
+    public class ByWeightShippingController : BaseShippingController
     {
         private readonly IShippingService _shippingService;
         private readonly IStoreService _storeService;
@@ -39,7 +39,7 @@ namespace Grand.Plugin.Shipping.ByWeight.Controllers
         private readonly IMeasureService _measureService;
         private readonly MeasureSettings _measureSettings;
 
-        public ShippingByWeightController(IShippingService shippingService,
+        public ByWeightShippingController(IShippingService shippingService,
             IStoreService storeService,
             ICountryService countryService,
             IStateProvinceService stateProvinceService,
@@ -344,6 +344,18 @@ namespace Grand.Plugin.Shipping.ByWeight.Controllers
             ViewBag.formId = formId;
 
             return View("~/Plugins/Shipping.ByWeight/Views/ShippingByWeight/EditPopup.cshtml", model);
+        }
+
+        public override IList<string> ValidateShippingForm(FormCollection form)
+        {
+            //you can implement here any validation logic
+            return new List<string>();
+        }
+
+        public override string GetFormPartialView(string shippingOption)
+        {
+            //you can use here any view 
+            return "";
         }
     }
 }

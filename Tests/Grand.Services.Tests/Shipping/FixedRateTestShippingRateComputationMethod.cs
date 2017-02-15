@@ -72,6 +72,11 @@ namespace Grand.Services.Tests.Shipping {
             routeValues = null;
         }
 
+        public Type GetControllerType()
+        {
+            return typeof(object);
+        }
+
         /// <summary>
         /// Gets a shipment tracker
         /// </summary>
